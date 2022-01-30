@@ -23,7 +23,7 @@ bool isValidCard(long cardNumber);
  * @param n long number
  * @return int n length
  */
-int numLength(const long n);
+int getNumLength(const long n);
 
 /**
  * @brief Get the first digit of long number
@@ -45,7 +45,7 @@ char *credit(long cardNum)
     {
         int firstDigit = getFirstDigit(cardNum);
         int secondDigit = (cardNum / 10) % 10;
-        int cardNumLength = numLength(cardNum);
+        int cardNumLength = getNumLength(cardNum);
         return cardNumLength == 15 && firstDigit == 3 && secondDigit == 7 || secondDigit == 4   ? "AMEX"
                : firstDigit == 5 && secondDigit >= 1 && secondDigit <= 5 && cardNumLength == 16 ? "MASTERCARD"
                : cardNumLength == 13 || cardNumLength == 16 && firstDigit == 4                  ? "VISA"
@@ -57,7 +57,7 @@ char *credit(long cardNum)
 
 bool isValidCard(long cardNum)
 {
-    int cardNumLength = numLength(cardNum);
+    int cardNumLength = getNumLength(cardNum);
     if (cardNumLength < 13 || cardNumLength > 16 || cardNumLength == 14)
         return false;
 
@@ -80,11 +80,11 @@ bool isValidCard(long cardNum)
     return (digitsSum + multipliedProductsSum) % 10 == 0; // If the total’s last digit is 0 (or, put more formally, if the total modulo 10 is congruent to 0), the number is valid!
 }
 
-int numLength(const long n)
+int getNumLength(const long n)
 {
     if (n < 10)
         return 1;
-    return 1 + numLength(n / 10);
+    return 1 + getNumLength(n / 10);
 }
 
 int getFirstDigit(long n)
