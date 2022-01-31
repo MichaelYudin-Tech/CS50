@@ -1,116 +1,95 @@
 #include <cs50.h>
 #include <stdio.h>
-#include <string.h>
 
-// first we need the variable for the credit card number to be type long
-// I want to run through the card digits, but I don't want the original card number to be lost
-long Card, CardCheck = 0;
-// then I need a variable to count the amount of digits in the credit card number - Digits
-// I also need a variable to help me keep track of 'every other digit' for the checksum - i
-// 2 more variables to check the first and second digits of the card
-// and 2 variables to run the checksum, one for each series of numbers that I am adding togethe
-int Digits, i, FirstDigit, SecondDigit, Checksum, Checksum2 = 0;
-// a final variable for the card type
-string CardType = "INVALID";
-// a function to count the digits in the card number
-// in this function I am also storing the first two digits of the card and determining it's type
-// since I'm already going through all the digits, I'm also going to run a checksum in this function
-void Count_Digits(void)
-{
-    //init to not get errors on back to back runs
-    Digits = 0;
-    i = 0;
-    FirstDigit = 0;
-    SecondDigit = 0;
-    Checksum = 0;
-    Checksum2 = 0;
-    CardType = "INVALID";
-    CardCheck = Card;
-    do
-    {
-        // on the second to last iteration of the reduction of digits i will be storing the first two digits of the number
-        // i'm only storing the CardCheck in FirstDigit when all but the last digit have been reduced from the number in order to not accidentally try to store a long in an int
-        if ((CardCheck < 100) && (CardCheck > 10))
-        {
-            SecondDigit = (CardCheck % 10); // will give me the remainder, i.e. the second digit, e.g. 53 % 10 = 3
-            FirstDigit = (CardCheck / 10); // will give me the first digit, e.g. 53 / 10 = 5
-            Digits += 2;
-            if (i == 0)
-            {
-                Checksum += ((FirstDigit * 2) / 10) + ((FirstDigit * 2) % 10);
-                Checksum2 += SecondDigit;
-            }
-            else
-            {
-                Checksum += ((SecondDigit * 2) / 10) + ((SecondDigit * 2) % 10);
-                Checksum2 += FirstDigit;
-            }
-            Checksum += Checksum2;
-            break;
-        }
-        if (i == 0)
-        {
-            Checksum2 += CardCheck % 10;
-            i = 1;
-        }
-        else
-        {
-            Checksum += (((CardCheck % 10) * 2) / 10) + (((CardCheck % 10) * 2) % 10);
-            i = 0;
-        }
+/**
+ * @brief Reports whether a credit card has a valid American Express, MasterCard, or Visa card number.
+ * 
+ * @param cardNum 
+ * @return char AMEX or MASTERCARD or VISA or INVALID
+ */
+char *credit(long cardNum);
 
-        CardCheck /= 10;
+/**
+ * @brief Checks if credit card's number is valid
+ * 
+ * @param cardNumber credit card number
+ * @return true if credit card number is valid, otherwise false
+ */
+bool isValidCard(long cardNumber);
 
-        Digits++;
-    }
-    while ((CardCheck != 0));
-    if ((Checksum % 10) == 0)
-    {
-        switch (FirstDigit)
-        {
-            case 3:
-                if (((SecondDigit == 4) || (SecondDigit == 7)) && (Digits == 15))
-                {
-                    CardType = "AMEX";
-                    break;
-                }
-                CardType = "INVALID";
-                break;
+/**
+ * @brief Checks the length (number of digits) of long number
+ * 
+ * @param n long number
+ * @return int n length
+ */
+int getNumLength(const long n);
 
-            case 4:
-                if ((Digits == 13) || (Digits == 16))
-                {
-                    CardType = "VISA";
-                    break;
-                }
-                CardType = "INVALID";
-                break;
-
-            case 5:
-                if (((SecondDigit > 0) && (SecondDigit < 6)) && (Digits == 16))
-                {
-                    CardType = "MASTERCARD";
-                    break;
-                }
-                CardType = "INVALID";
-                break;
-        }
-    }
-    return;
-}
+/**
+ * @brief Get the first digit of long number
+ * 
+ * @param n
+ * @return int 
+ */
+int getFirstDigit(long n);
 
 int main(void)
 {
-    // get card number from the user
-    do
-    {
-        Card = get_long("Number: ");
-    }
-    while ((Card < 0) || (Card > 12345678901234567));
-    if ((Card > 123456789012) && (Card < 12345678901234567))
-    {
-        Count_Digits();
-    }
-    printf("%s\n", CardType);
+    long cardNum = get_long("Number: ");
+    printf("%s\n", credit(cardNum));
+}
 
+char *credit(long cardNum)
+{
+    if (isValidCard(cardNum))
+    {
+        int firstDigit = getFirstDigit(cardNum);
+        int secondDigit = (cardNum / 10) % 10;
+        int cardNumLength = getNumLength(cardNum);
+        return cardNumLength == 15 && firstDigit == 3 && secondDigit == 7 || secondDigit == 4   ? "AMEX"
+               : firstDigit == 5 && secondDigit >= 1 && secondDigit <= 5 && cardNumLength == 16 ? "MASTERCARD"
+               : cardNumLength == 13 || cardNumLength == 16 && firstDigit == 4                  ? "VISA"
+                                                                                                : "INVALID";
+    }
+
+    return "INVALID";
+}
+
+bool isValidCard(long cardNum)
+{
+    int cardNumLength = getNumLength(cardNum);
+    if (cardNumLength < 13 || cardNumLength > 16 || cardNumLength == 14)
+        return false;
+
+    int digitsSum = 0, multipliedProductsSum = 0, i = 0;
+
+    while (i <= cardNumLength)
+    {
+        int temp = cardNum % 10;
+
+        if (i % 2 == 0)
+            digitsSum += temp; // The sum of the digits that weren’t multiplied by 2.
+
+        else if (temp * 2 >= 10)                        // Multiply every other digit by 2, starting with the number’s second-to-last digit,
+            multipliedProductsSum += temp * 2 % 10 + 1; // and then add those products’ digits together.
+        else
+            multipliedProductsSum += (temp * 2);
+        cardNum = cardNum / 10;
+        i++;
+    }
+    return (digitsSum + multipliedProductsSum) % 10 == 0; // If the total’s last digit is 0 (or, put more formally, if the total modulo 10 is congruent to 0), the number is valid!
+}
+
+int getNumLength(const long n)
+{
+    if (n < 10)
+        return 1;
+    return 1 + getNumLength(n / 10);
+}
+
+int getFirstDigit(long n)
+{
+    while (n >= 10)
+        n /= 10;
+    return n;
 }
