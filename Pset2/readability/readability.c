@@ -1,70 +1,61 @@
-#include <stdio.h>
 #include <math.h>
 #include <cs50.h>
-#include <ctype.h>
-#include <string.h>
+#include <stdio.h>
 
-void count(string text);
-void grade_level(void);
-// I rather have all these variables be global than return a single variable every time and have to write 2 more functions
-// for a more complex program I would of course write seperate functions to have single responsability
-float letters = 0;
-// I'm starting to count at 1 since my code doesn't capture the final word in the text, since it ends with period and doesn't have a space after it
-float words = 1;
-float sentences = 0;
-int index = 0;
-string grade = NULL;
+/**
+ * @brief Calculates the grade of text by the Coleman-Liau formula
+ * @param text 
+ * @return int Coleman-Liau index grade of the text input 
+ */
+double readability(char const *text);
+
+/**
+ * @brief Consts the number of letters, words and sentences in a string
+ * 
+ * @param str 
+ * @return int* array with the number of sentences, number of words, and number of letters in this order
+ */
+int *countLettersWordsAndSentences(char const *str);
 
 int main(void)
 {
-    string sample_text = 0;
-    // prompt user for sample text
-    sample_text = get_string("Text: ");
-    // counts letters, words and sentences, all in one function
-    count(sample_text);
-    // grades the text and prints the correct grade level
-    grade_level();
+    char *text = get_string("Text: ");
+    double index = readability(text);
+
+    if (index >= 1 && index <= 16)
+        printf("%s, %f\n", "Grade", index);
+    else
+        printf("%s, \n", index < 1 ? "Before Grade 1" : "Grade 16+");
 }
 
-// iterates through all the letters
-// I wanted to save lines of code and not make seperate functions to count letters, words and sentences
-// since it's very easy to understand
-void count(string text)
+double readability(char const *text)
+{
+    int *count = countLettersWordsAndSentences(text);
+    float sentences = count[0];
+    float words = count[1];
+    float letters = count[2];
+    return round((0.0588 * (letters / words) * 100) - (0.296 * (sentences / words) * 100) - 15.8);
+}
+
+int *countLettersWordsAndSentences(char const *str)
 {
     int i = 0;
-
-    while (text[i] != '\0')
+    static int results[3];
+    int numberOfWords = 1;
+    int numberOfLetters = 0;
+    int numberOfSentences = 1;
+    while (str[i] != '\0')
     {
-        if (tolower(text[i]) >= 'a' && tolower(text[i]) <= 'z') // I convert the letters to lowercase to simplify the code
-        {
-            letters++;
-        }
-        else if (text[i] == 32) // '32' = space in ASCII
-        {
-            words++;
-        }
-        else if (text[i] == 33 || text[i] == 46 || text[i] == 63) // '33' = !; '46' = .; '63' = ? in ASCII
-        {
-            sentences++;
-        }
+        if (str[i] == ' ')
+            numberOfWords++;
+        else if (str[i] >= 'a' && str[i] <= 'z' || str[i] >= 'A' && str[i] <= 'Z')
+            numberOfLetters++;
+        else if (str[i] == 33 || str[i] == 46 || str[i] == 63)
+            numberOfSentences++;
         i++;
     }
-}
-
-// I opted to printf in this function so that I don't have to concatenate "Grade " & (int)index
-void grade_level(void)
-{
-    index = round((0.0588 * (letters / words) * 100) - (0.296 * (sentences / words) * 100) - 15.8);
-    if (index < 1)
-    {
-        printf("Before Grade 1\n");
-    }
-    else if (index >= 1 && index < 16)
-    {
-        printf("Grade %d\n", index);
-    }
-    else if (index > 16)
-    {
-        printf("Grade 16+\n");
-    }
+    results[0] = numberOfSentences;
+    results[1] = numberOfWords;
+    results[2] = numberOfLetters;
+    return results;
 }
