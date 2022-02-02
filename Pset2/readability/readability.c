@@ -7,7 +7,7 @@ struct Readability
     char *text;
 };
 
-struct Readability *makeText(char *text)
+struct Readability *makeReadability(char *text)
 {
     struct Readability *r = malloc(sizeof(struct Readability));
     r->text = text;

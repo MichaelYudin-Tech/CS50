@@ -1,5 +1,5 @@
 struct Readability;
-struct Readability *makeText(char *text);
+struct Readability *makeReadability(char *text);
 int getNumberOfSentences(struct Readability *rt);
 int getNumberOfWords(struct Readability *rt);
 int getNumberOfLetters(struct Readability *rt);
