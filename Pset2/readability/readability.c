@@ -1,61 +1,56 @@
 #include <math.h>
-#include <cs50.h>
-#include <stdio.h>
+#include <stdlib.h>
+#include "readability.h"
 
-/**
- * @brief Calculates the grade of text by the Coleman-Liau formula
- * @param text 
- * @return int Coleman-Liau index grade of the text input 
- */
-double readability(char const *text);
-
-/**
- * @brief Consts the number of letters, words and sentences in a string
- * 
- * @param str 
- * @return int* array with the number of sentences, number of words, and number of letters in this order
- */
-int *countLettersWordsAndSentences(char const *str);
-
-int main(void)
+struct Readability
 {
-    char *text = get_string("Text: ");
-    double index = readability(text);
+    char *text;
+};
 
-    if (index >= 1 && index <= 16)
-        printf("%s, %f\n", "Grade", index);
-    else
-        printf("%s, \n", index < 1 ? "Before Grade 1" : "Grade 16+");
+struct Readability *makeText(char *text)
+{
+    struct Readability *r = malloc(sizeof(struct Readability));
+    r->text = text;
+    return r;
 }
 
-double readability(char const *text)
+int getNumberOfSentences(struct Readability *rt)
 {
-    int *count = countLettersWordsAndSentences(text);
-    float sentences = count[0];
-    float words = count[1];
-    float letters = count[2];
-    return round((0.0588 * (letters / words) * 100) - (0.296 * (sentences / words) * 100) - 15.8);
-}
-
-int *countLettersWordsAndSentences(char const *str)
-{
-    int i = 0;
-    static int results[3];
-    int numberOfWords = 1;
-    int numberOfLetters = 0;
-    int numberOfSentences = 1;
-    while (str[i] != '\0')
+    int count = 0;
+    for (int i = 0; rt->text[i]; i++)
     {
-        if (str[i] == ' ')
-            numberOfWords++;
-        else if (str[i] >= 'a' && str[i] <= 'z' || str[i] >= 'A' && str[i] <= 'Z')
-            numberOfLetters++;
-        else if (str[i] == 33 || str[i] == 46 || str[i] == 63)
-            numberOfSentences++;
-        i++;
+        if (rt->text[i] == 33 || rt->text[i] == 46 || rt->text[i] == 63)
+            count++;
     }
-    results[0] = numberOfSentences;
-    results[1] = numberOfWords;
-    results[2] = numberOfLetters;
-    return results;
+
+    return count;
+}
+
+int getNumberOfWords(struct Readability *rt)
+{
+    int count = 0;
+    for (int i = 0; rt->text[i]; i++)
+    {
+        if (rt->text[i] == ' ')
+            count++;
+    }
+
+    return count;
+}
+
+int getNumberOfLetters(struct Readability *rt)
+{
+    int count = 0;
+    for (int i = 0; rt->text[i]; i++)
+    {
+        if (rt->text[i] >= 'a' && rt->text[i] <= 'z' || rt->text[i] >= 'A' && rt->text[i] <= 'Z')
+            count++;
+    }
+
+    return count;
+}
+
+int getTextGrade(struct Readability *rt)
+{
+    return round((0.0588 * (getNumberOfLetters(rt) / getNumberOfWords(rt)) * 100) - (0.296 * (getNumberOfLetters(rt) / getNumberOfWords(rt)) * 100) - 15.8);
 }
